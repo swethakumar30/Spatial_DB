@@ -1,6 +1,6 @@
 # Spatial_DB
 Spatial database
 
-Create convex hull
-Find 3 nearest neighbours
-Spirograph around one location
+1. Create convex hull
+2. Find 3 nearest neighbours
+3. Spirograph around one location
