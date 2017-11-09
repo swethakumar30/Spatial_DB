@@ -1,0 +1,78 @@
+postgres=> create database spatial
+
+postgres=> \connect spatial
+Password for user postgres:
+psql (9.6.3, server 9.6.1)
+SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256, bits: 128, compression: off)
+You are now connected to database "spatial" as user "postgres".
+
+spatial=> CREATE EXTENSION postgis;
+CREATE EXTENSION
+
+spatial=> CREATE EXTENSION postgis_topology;
+CREATE EXTENSION
+
+spatial=> create table usc_points(name varchar(20),geom geometry);
+CREATE TABLE
+
+spatial=> insert into usc_points values('Home','POINT(-118.2803095 34.0285055)');
+INSERT 0 1
+spatial=> insert into usc_points values('Univ Avenue','POINT(-118.283775 34.023385)');
+INSERT 0 1
+spatial=>   insert into usc_points values('Leavey Library','POINT(-118.2830729 34.0216716)');
+INSERT 0 1
+spatial=> insert into usc_points values('Founders Park','POINT(-118.284765 34.021490)');
+INSERT 0 1
+spatial=> insert into usc_points values('THH 101','POINT(-118.28414 34.022556)');
+INSERT 0 1
+spatial=> insert into usc_points values('Horse','POINT(-118.285145 34.020078)');
+INSERT 0 1
+spatial=> insert into usc_points values('Pizza - CPK','POINT(-118.286178 34.020491)');
+INSERT 0 1
+spatial=> insert into usc_points values('Hubbard Hall','POINT(-118.284134 34.019669)');
+INSERT 0 1
+spatial=> insert into usc_points values('Dornsife Colg','POINT(-118.285986 34.019425)');
+INSERT 0 1
+
+spatial=> select name ,ST_AsText(geom) from usc_points;
+      name      |           st_astext
+----------------+--------------------------------
+ Home           | POINT(-118.2803095 34.0285055)
+ Univ Avenue    | POINT(-118.283775 34.023385)
+ Leavey Library | POINT(-118.2830729 34.0216716)
+ Founders Park  | POINT(-118.284765 34.02149)
+ THH 101        | POINT(-118.28414 34.022556)
+ Horse          | POINT(-118.285145 34.020078)
+ Pizza - CPK    | POINT(-118.286178 34.020491)
+ Hubbard Hall   | POINT(-118.284134 34.019669)
+ Dornsife Colg  | POINT(-118.285986 34.019425)
+(9 rows)
+
+Query 1 - Convex Hull
+
+spatial=> SELECT ST_AsText(ST_ConvexHull(ST_Collect(geom))) as convex_hull_points FROM usc_points;
+                                                                 convex_hull_points
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ POLYGON((-118.285986 34.019425,-118.286178 34.020491,-118.2803095 34.0285055,-118.2830729 34.0216716,-118.284134 34.019669,-118.285986 34.019425))
+(1 row)
+
+OR
+
+spatial=> SELECT ST_AsText(ST_ConvexHull( ST_Collect(ST_GeomFromText('MULTIPOINT(-118.2803095 34.0285055,-118.283775 34.023385, -118.2830729 34.0216716, -118.284765 34.02149
+, -118.28414 34.022556, -118.285145 34.020078, -118.286178 34.020491, -118.284134 34.019669, -118.285986 34.019425 )')))) as convex_hull_points;
+                                                                 convex_hull_points
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ POLYGON((-118.285986 34.019425,-118.286178 34.020491,-118.2803095 34.0285055,-118.2830729 34.0216716,-118.284134 34.019669,-118.285986 34.019425))
+(1 row)
+
+
+
+Query 2 - 3 nearest neighbours of Home
+
+spatial=> SELECT name,ST_AsText(geom) as points FROM usc_points where ST_AsText(geom) != 'POINT(-118.2803095 34.0285055)' ORDER BY usc_points.geom <-> 'POINT(-118.2803095 34.0285055)' LIMIT 3;
+      name      |             points
+----------------+--------------------------------
+ Univ Avenue    | POINT(-118.283775 34.023385)
+ THH 101        | POINT(-118.28414 34.022556)
+ Leavey Library | POINT(-118.2830729 34.0216716)
+(3 rows)
